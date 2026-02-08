@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Upload NEC</title>
+</head>
+<body>
+
+<h2>Upload NEC PDF</h2>
+
+<input id="pw" type="password" placeholder="Admin password">
+<input id="file" type="file" accept="application/pdf">
+
+<button onclick="upload()">Upload + Index</button>
+
+<pre id="out"></pre>
+
+<script>
+async function upload() {
+
+  const pw = document.getElementById('pw').value;
+  const f = document.getElementById('file').files[0];
+
+  const form = new FormData();
+  form.append("password", pw);
+  form.append("file", f);
+
+  const r = await fetch('/admin/upload_nec', {
+    method:'POST',
+    body:form
+  });
+
+  document.getElementById('out').textContent =
+    await r.text();
+}
+</script>
+
+</body>
+</html>
