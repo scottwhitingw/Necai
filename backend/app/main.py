@@ -1,5 +1,4 @@
 from fastapi import FastAPI
-from fastapi.responses import FileResponse
 
 from app.routes import kb, nec
 
@@ -10,8 +9,12 @@ app.include_router(nec.router)
 
 @app.get("/")
 def home():
-    return FileResponse("../frontend/index.html")
+    return {
+        "status": "online",
+        "docs": "/docs",
+        "nec_endpoint": "/nec/ask"
+    }
 
 @app.get("/admin")
 def admin():
-    return FileResponse("../frontend/admin.html")
+    return {"status": "admin endpoint active"}
