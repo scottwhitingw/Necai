@@ -1,4 +1,6 @@
-from app.services.openai_client import client
+from openai import OpenAI
+
+client = OpenAI()
 
 SYSTEM = """
 You are an NEC lookup assistant.
@@ -14,12 +16,16 @@ Output:
 3) Citations
 """.strip()
 
-def nec_lookup(question: str, vector_store_id: str) -> str:
 
+def nec_lookup(question: str, vector_store_id: str) -> str:
     resp = client.responses.create(
-        model="gpt-5",
-        input=f"{SYSTEM}\n\nQuestion:\n{question}",
+        model="gpt-4.1-mini",
+        input=[
+            {"role": "system", "content": SYSTEM},
+            {"role": "user", "content": question},
+        ],
         tools=[{"type": "file_search"}],
+        tool_choice="auto",
         tool_resources={
             "file_search": {
                 "vector_store_ids": [vector_store_id]
@@ -27,4 +33,19 @@ def nec_lookup(question: str, vector_store_id: str) -> str:
         },
     )
 
-    return resp.output_text
+    # Most SDK versions expose output_text; keep a safe fallback.
+    out = getattr(resp, "output_text", None)
+    if out:
+        return out
+
+    # Fallback: try to extract any text blocks from output
+    try:
+        chunks = []
+        for item in resp.output:
+            if getattr(item, "type", "") == "message":
+                for c in item.content:
+                    if getattr(c, "type", "") == "output_text":
+                        chunks.append(c.text)
+        return "\n".join(chunks).strip()
+    except Exception:
+        return ""
